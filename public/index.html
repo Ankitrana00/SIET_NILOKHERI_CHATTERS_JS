@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SIET Nilokheri Chatters</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="/socket.io/socket.io.js" defer></script>
+  <script type="module" defer src="https://cdn.jsdelivr.net/npm/emoji-picker-element@^1/index.js"></script>
+  <script defer src="script.js"></script>
+</head>
+<!-- Add these inside <body> -->
+  <div id="typing-indicator" class="typing-indicator" style="display: none;">Stranger is typing...</div>
+  <audio id="notification-sound" src="notification.mp3" preload="auto"></audio>
+  
+<body>
+  <div class="app-container">
+    <header class="app-header">
+      <h1>💬 SIET Nilokheri Chatters</h1>
+      <button id="dark-mode-toggle" title="Toggle Dark Mode">🌓</button>
+    </header>
+
+    <main class="chat-container glass">
+      <div id="chat-box" class="chat-box"></div>
+
+      <div class="input-group">
+        <input type="text" id="message-input" placeholder="Type a message..." />
+        <button id="emoji-btn" title="Emoji">😀</button>
+        <button id="photo-btn" title="Send Photo">📷</button>
+        <button id="send-btn" class="primary-btn">Send</button>
+      </div>
+
+      <div class="chat-controls">
+        <button id="new-match" class="secondary-btn">🔄 Find New Chat</button>
+        <button id="extend-btn" class="secondary-btn">⏳ Extend Chat</button>
+      </div>
+
+      <div class="status-bar">
+        <span id="active-users">Active Users: 0</span>
+        <span id="timer">Time Left: 300s</span>
+      </div>
+    </main>
+
+    <emoji-picker id="emoji-picker" style="display: none;"></emoji-picker>
+    <input type="file" id="image-input" accept="image/*" style="display: none;" />
+  </div>
+</body>
+</html>
+
+
+
+
+
+
+
+
+  
