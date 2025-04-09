@@ -7,7 +7,13 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
 
+// Serve static files from public directory
 app.use(express.static(path.join(__dirname, 'public')));
+
+// ✅ Add this route for Railway health check
+app.get('/', (req, res) => {
+  res.send('🚀 SIET Nilokheri Chatters Server is running!');
+});
 
 let waitingUser = null;
 let users = new Map(); // socketId -> partnerId
@@ -103,9 +109,10 @@ io.on('connection', (socket) => {
     });
 });
 
+// Listen on Railway's assigned port or fallback to 3000
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`✅ Server running on port ${PORT}`);
 });
 
 
