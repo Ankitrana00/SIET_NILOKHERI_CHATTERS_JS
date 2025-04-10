@@ -1,119 +1,113 @@
-const express = require('express');
-const http = require('http');
-const socketIo = require('socket.io');
-const path = require('path');
+const express = require("express");
+const http = require("http");
+const { Server } = require("socket.io");
+const path = require("path");
 
 const app = express();
 const server = http.createServer(app);
-const io = socketIo(server);
+const io = new Server(server);
 
-// Serve static files from public directory
-app.use(express.static(path.join(__dirname, 'public')));
+const waitingUsers = [];
 
-// ✅ Add this route for Railway health check
-app.get('/', (req, res) => {
-  res.send('🚀 SIET Nilokheri Chatters Server is running!');
+app.use(express.static(path.join(__dirname)));
+
+app.get("/", (req, res) => {
+  res.sendFile(__dirname + "/index.html");
 });
 
-let waitingUser = null;
-let users = new Map(); // socketId -> partnerId
+io.on("connection", (socket) => {
+  console.log(`User connected: ${socket.id}`);
+  io.emit("activeUsers", io.engine.clientsCount);
 
-io.on('connection', (socket) => {
-    console.log('User connected:', socket.id);
+  findMatch(socket);
 
-    // Match users
-    if (waitingUser && waitingUser !== socket.id) {
-        users.set(socket.id, waitingUser);
-        users.set(waitingUser, socket.id);
-
-        io.to(socket.id).emit('startChat');
-        io.to(waitingUser).emit('startChat');
-        waitingUser = null;
-    } else {
-        waitingUser = socket.id;
+  socket.on("chatMessage", (msg) => {
+    if (socket.partnerId) {
+      io.to(socket.partnerId).emit("chatMessage", msg);
     }
+  });
 
-    // Active Users Count
-    io.emit('activeUsers', io.engine.clientsCount);
+  socket.on("typing", () => {
+    if (socket.partnerId) {
+      io.to(socket.partnerId).emit("typing");
+    }
+  });
 
-    socket.on('chatMessage', (msg) => {
-        const partnerId = users.get(socket.id);
-        if (partnerId) {
-            io.to(partnerId).emit('chatMessage', msg);
-        }
-    });
+  socket.on("seen", () => {
+    if (socket.partnerId) {
+      io.to(socket.partnerId).emit("seen");
+    }
+  });
 
-    socket.on('photo', (base64Image) => {
-        const partnerId = users.get(socket.id);
-        if (partnerId) {
-            io.to(partnerId).emit('photo', base64Image);
-        }
-    });
+  socket.on("photo", (imageData) => {
+    if (socket.partnerId) {
+      io.to(socket.partnerId).emit("photo", imageData);
+    }
+  });
 
-    socket.on('typing', () => {
-        const partnerId = users.get(socket.id);
-        if (partnerId) {
-            io.to(partnerId).emit('typing');
-        }
-    });
+  socket.on("disconnectChat", () => {
+    if (socket.partnerId) {
+      io.to(socket.partnerId).emit("chatEnded");
+    }
+    disconnectFromPartner(socket);
+  });
 
-    socket.on('seen', () => {
-        const partnerId = users.get(socket.id);
-        if (partnerId) {
-            io.to(partnerId).emit('seen');
-        }
-    });
+  socket.on("findNewMatch", () => {
+    disconnectFromPartner(socket);
+    findMatch(socket);
+  });
 
-    socket.on('findNewMatch', () => {
-        const oldPartner = users.get(socket.id);
-        if (oldPartner) {
-            users.delete(oldPartner);
-            io.to(oldPartner).emit('chatMessage', 'User left the chat. Looking for new match...');
-        }
-        users.delete(socket.id);
-        if (waitingUser === socket.id) waitingUser = null;
-
-        // Re-match logic
-        if (waitingUser && waitingUser !== socket.id) {
-            users.set(socket.id, waitingUser);
-            users.set(waitingUser, socket.id);
-
-            io.to(socket.id).emit('startChat');
-            io.to(waitingUser).emit('startChat');
-            waitingUser = null;
-        } else {
-            waitingUser = socket.id;
-        }
-    });
-
-    socket.on('disconnectChat', () => {
-        const partnerId = users.get(socket.id);
-        if (partnerId) {
-            io.to(partnerId).emit('chatMessage', 'User was disconnected due to inactivity.');
-            users.delete(partnerId);
-        }
-        users.delete(socket.id);
-        if (waitingUser === socket.id) waitingUser = null;
-    });
-
-    socket.on('disconnect', () => {
-        const partnerId = users.get(socket.id);
-        if (partnerId) {
-            io.to(partnerId).emit('chatMessage', 'User disconnected.');
-            users.delete(partnerId);
-        }
-        users.delete(socket.id);
-        if (waitingUser === socket.id) waitingUser = null;
-
-        io.emit('activeUsers', io.engine.clientsCount);
-    });
+  socket.on("disconnect", () => {
+    console.log(`User disconnected: ${socket.id}`);
+    disconnectFromPartner(socket);
+    io.emit("activeUsers", io.engine.clientsCount);
+  });
 });
 
-// Listen on Railway's assigned port or fallback to 3000
+// Matchmaking function
+function findMatch(socket) {
+  if (waitingUsers.length > 0) {
+    const partner = waitingUsers.pop();
+    pairSockets(socket, partner);
+  } else {
+    waitingUsers.push(socket);
+  }
+}
+
+// Pairing function
+function pairSockets(s1, s2) {
+  s1.partnerId = s2.id;
+  s2.partnerId = s1.id;
+  s1.emit("startChat");
+  s2.emit("startChat");
+}
+
+// Clean disconnection logic
+function disconnectFromPartner(socket) {
+  if (socket.partnerId) {
+    const partner = io.sockets.sockets.get(socket.partnerId);
+    if (partner) {
+      partner.partnerId = null;
+      partner.emit("chatEnded");
+    }
+  }
+  socket.partnerId = null;
+
+  const index = waitingUsers.indexOf(socket);
+  if (index !== -1) waitingUsers.splice(index, 1);
+}
+
+// Broadcast active users every 5 seconds
+setInterval(() => {
+  io.emit("activeUsers", io.engine.clientsCount);
+}, 5000);
+
+// Railway/Heroku compatibility
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, '0.0.0.0', () => {
-  console.log(`✅ Server running on port ${PORT}`);
+server.listen(PORT, () => {
+  console.log(`🚀 Server running on port ${PORT}`);
 });
+
 
 
 

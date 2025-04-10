@@ -11,8 +11,10 @@
 </head>
 
 <body>
-  <!-- Moved inside body tag -->
+  <!-- Typing indicator -->
   <div id="typing-indicator" class="typing-indicator" style="display: none;">Stranger is typing...</div>
+
+  <!-- Notification sound -->
   <audio id="notification-sound" src="notification.mp3" preload="auto"></audio>
 
   <div class="app-container">
@@ -40,16 +42,29 @@
         <span id="active-users">Active Users: 0</span>
         <span id="timer">Time Left: 300s</span>
       </div>
+
+      <!-- Floating Action Button for quick Send -->
+      <button id="fab-send" class="fab" title="Send">➤</button>
+
+      <!-- Reaction Popup -->
+      <div class="reaction-popup" style="display: none;">
+        ❤️ 😂 👍 😮 😢
+      </div>
     </main>
 
+    <!-- Emoji Picker -->
     <emoji-picker id="emoji-picker" style="display: none;"></emoji-picker>
+
+    <!-- Image Upload -->
     <input type="file" id="image-input" accept="image/*" style="display: none;" />
   </div>
 </body>
 </html>
+
 <footer>
   © khangarot
 </footer>
+
 
 
 

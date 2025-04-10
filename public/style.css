@@ -1,30 +1,37 @@
+/* Base */
 body {
-  font-family: Arial, sans-serif;
-  background: #f4f4f4;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  background: linear-gradient(to right, #e0eafc, #cfdef3);
   margin: 0;
   padding: 0;
+  transition: background 0.3s ease;
 }
 
 .app-container {
   max-width: 720px;
   margin: 30px auto;
-  background: #fff;
-  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 15px;
   overflow: hidden;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(8px);
 }
 
+/* Gradient Header */
 .app-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   padding: 15px 25px;
-  background: #fafafa;
-  border-bottom: 1px solid #ddd;
+  background: linear-gradient(90deg, #667eea, #764ba2);
+  color: white;
+  border-bottom: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .chat-container {
   padding: 15px;
+  position: relative;
 }
 
 .chat-box {
@@ -37,14 +44,23 @@ body {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  background: rgba(255, 255, 255, 0.4);
+  backdrop-filter: blur(6px);
 }
 
+/* Elevated Chat Bubbles */
 .chat-bubble {
   padding: 10px 15px;
   border-radius: 20px;
   max-width: 60%;
   word-wrap: break-word;
   position: relative;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s;
+}
+
+.chat-bubble:hover {
+  transform: scale(1.02);
 }
 
 .chat-bubble.user {
@@ -86,6 +102,11 @@ body {
   background: #eaeaea;
   border-radius: 5px;
   cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.input-group button:hover {
+  background: #d5d5d5;
 }
 
 .primary-btn {
@@ -111,13 +132,14 @@ body {
   color: #444;
 }
 
-/* Emoji picker floating */
+/* Floating Emoji Picker */
 #emoji-picker {
   position: absolute;
   bottom: 100px;
   left: 20px;
   z-index: 10;
   box-shadow: 0 5px 10px rgba(0,0,0,0.15);
+  animation: fadeIn 0.3s ease;
 }
 
 /* Typing Indicator */
@@ -126,6 +148,47 @@ body {
   margin-left: 20px;
   color: gray;
   padding-bottom: 5px;
+  font-style: italic;
+  animation: pulse 1.2s infinite ease-in-out;
+}
+
+/* Floating Action Button (FAB) */
+.fab {
+  position: fixed;
+  bottom: 25px;
+  right: 25px;
+  background: #007bff;
+  color: white;
+  border: none;
+  padding: 14px 16px;
+  border-radius: 50%;
+  font-size: 24px;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+  z-index: 1000;
+  transition: background 0.3s ease;
+}
+
+.fab:hover {
+  background: #0056b3;
+}
+
+/* Reaction Popup */
+.reaction-popup {
+  position: absolute;
+  bottom: 50px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: white;
+  border-radius: 30px;
+  padding: 8px 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  font-size: 20px;
+  display: flex;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+  z-index: 20;
 }
 
 /* Footer */
@@ -134,6 +197,42 @@ footer {
   padding: 10px;
   font-size: 12px;
   color: #888;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse {
+  0% { opacity: 0.6; }
+  50% { opacity: 1; }
+  100% { opacity: 0.6; }
+}
+
+/* Dark Mode Styles */
+body.dark-mode {
+  background: #121212;
+}
+
+body.dark-mode .app-container {
+  background: rgba(30, 30, 30, 0.9);
+  color: #f0f0f0;
+}
+
+body.dark-mode .chat-box {
+  background: rgba(40, 40, 40, 0.9);
+}
+
+body.dark-mode .chat-bubble.user {
+  background: #2e7d32;
+  color: #fff;
+}
+
+body.dark-mode .chat-bubble.partner {
+  background: #424242;
+  color: #fff;
 }
 
 /* ===== Mobile Responsive Fixes ===== */
@@ -169,6 +268,7 @@ footer {
     padding: 8px 12px;
   }
 }
+
 
 
 
