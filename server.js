@@ -1,111 +1,101 @@
 const express = require("express");
 const http = require("http");
-const { Server } = require("socket.io");
 const path = require("path");
+const socketIo = require("socket.io");
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server);
+const io = socketIo(server);
 
-const waitingUsers = [];
+const PORT = process.env.PORT || 3000;
 
-app.use(express.static(path.join(__dirname)));
+// Serve static files from the "public" folder
+app.use(express.static(path.join(__dirname, "public")));
 
+// Serve index.html at root
 app.get("/", (req, res) => {
-  res.sendFile(__dirname + "/index.html");
+  res.sendFile(path.join(__dirname, "public", "index.html"));
 });
 
-io.on("connection", (socket) => {
-  console.log(`User connected: ${socket.id}`);
-  io.emit("activeUsers", io.engine.clientsCount);
+// --- Socket.io Logic ---
+let users = [];
 
-  findMatch(socket);
+io.on("connection", (socket) => {
+  users.push(socket);
+  updateActiveUsers();
+
+  let partner = null;
+
+  const match = users.find((u) => u !== socket && !u.partner);
+  if (match) {
+    partner = match;
+    partner.partner = socket;
+    socket.partner = partner;
+
+    socket.emit("startChat");
+    partner.emit("startChat");
+  }
 
   socket.on("chatMessage", (msg) => {
-    if (socket.partnerId) {
-      io.to(socket.partnerId).emit("chatMessage", msg);
-    }
+    if (socket.partner) socket.partner.emit("chatMessage", msg);
+  });
+
+  socket.on("photo", (data) => {
+    if (socket.partner) socket.partner.emit("photo", data);
   });
 
   socket.on("typing", () => {
-    if (socket.partnerId) {
-      io.to(socket.partnerId).emit("typing");
-    }
+    if (socket.partner) socket.partner.emit("typing");
   });
 
   socket.on("seen", () => {
-    if (socket.partnerId) {
-      io.to(socket.partnerId).emit("seen");
-    }
-  });
-
-  socket.on("photo", (imageData) => {
-    if (socket.partnerId) {
-      io.to(socket.partnerId).emit("photo", imageData);
-    }
+    if (socket.partner) socket.partner.emit("seen");
   });
 
   socket.on("disconnectChat", () => {
-    if (socket.partnerId) {
-      io.to(socket.partnerId).emit("chatEnded");
+    if (socket.partner) {
+      socket.partner.partner = null;
+      socket.partner.emit("disconnect");
+      socket.partner = null;
     }
-    disconnectFromPartner(socket);
   });
 
   socket.on("findNewMatch", () => {
-    disconnectFromPartner(socket);
-    findMatch(socket);
+    if (socket.partner) {
+      socket.partner.partner = null;
+      socket.partner.emit("disconnect");
+      socket.partner = null;
+    }
+
+    // re-match logic
+    const available = users.find((u) => u !== socket && !u.partner);
+    if (available) {
+      partner = available;
+      partner.partner = socket;
+      socket.partner = partner;
+
+      socket.emit("startChat");
+      partner.emit("startChat");
+    }
   });
 
   socket.on("disconnect", () => {
-    console.log(`User disconnected: ${socket.id}`);
-    disconnectFromPartner(socket);
-    io.emit("activeUsers", io.engine.clientsCount);
+    users = users.filter((u) => u !== socket);
+    if (socket.partner) {
+      socket.partner.partner = null;
+      socket.partner.emit("disconnect");
+    }
+    updateActiveUsers();
   });
+
+  function updateActiveUsers() {
+    const count = users.length;
+    io.emit("activeUsers", count);
+  }
 });
 
-// Matchmaking function
-function findMatch(socket) {
-  if (waitingUsers.length > 0) {
-    const partner = waitingUsers.pop();
-    pairSockets(socket, partner);
-  } else {
-    waitingUsers.push(socket);
-  }
-}
-
-// Pairing function
-function pairSockets(s1, s2) {
-  s1.partnerId = s2.id;
-  s2.partnerId = s1.id;
-  s1.emit("startChat");
-  s2.emit("startChat");
-}
-
-// Clean disconnection logic
-function disconnectFromPartner(socket) {
-  if (socket.partnerId) {
-    const partner = io.sockets.sockets.get(socket.partnerId);
-    if (partner) {
-      partner.partnerId = null;
-      partner.emit("chatEnded");
-    }
-  }
-  socket.partnerId = null;
-
-  const index = waitingUsers.indexOf(socket);
-  if (index !== -1) waitingUsers.splice(index, 1);
-}
-
-// Broadcast active users every 5 seconds
-setInterval(() => {
-  io.emit("activeUsers", io.engine.clientsCount);
-}, 5000);
-
-// Railway/Heroku compatibility
-const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });
 
 
