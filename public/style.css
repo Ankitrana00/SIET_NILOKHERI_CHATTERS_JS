@@ -44,6 +44,7 @@ body {
   border-radius: 20px;
   max-width: 60%;
   word-wrap: break-word;
+  position: relative;
 }
 
 .chat-bubble.user {
@@ -56,10 +57,19 @@ body {
   align-self: flex-start;
 }
 
+.chat-bubble .status {
+  font-size: 10px;
+  color: gray;
+  position: absolute;
+  bottom: -14px;
+  right: 10px;
+}
+
 .input-group {
   display: flex;
   gap: 10px;
   margin-bottom: 10px;
+  align-items: center;
 }
 
 .input-group input {
@@ -70,8 +80,8 @@ body {
 }
 
 .input-group button {
-  padding: 10px;
-  font-size: 18px;
+  padding: 8px 10px;
+  font-size: 16px;
   border: none;
   background: #eaeaea;
   border-radius: 5px;
@@ -81,6 +91,7 @@ body {
 .primary-btn {
   background: #007bff;
   color: white;
+  font-weight: bold;
 }
 
 .secondary-btn {
@@ -108,45 +119,13 @@ body {
   z-index: 10;
   box-shadow: 0 5px 10px rgba(0,0,0,0.15);
 }
+
 /* Typing Indicator */
 .typing-indicator {
   font-size: 14px;
   margin-left: 20px;
   color: gray;
   padding-bottom: 5px;
-}
-
-/* Delivery status */
-.chat-bubble {
-  position: relative;
-  max-width: 60%;
-}
-
-.chat-bubble .status {
-  font-size: 10px;
-  color: gray;
-  position: absolute;
-  bottom: -14px;
-  right: 10px;
-}
-
-/* Responsive Fix for Input Group */
-@media (max-width: 600px) {
-  .input-group {
-    flex-direction: column;
-  }
-
-  .input-group input,
-  .input-group button {
-    width: 100%;
-  }
-}
-
-/* Improve Send Button Visibility */
-.primary-btn {
-  background: #007bff;
-  color: white;
-  font-weight: bold;
 }
 
 /* Footer */
@@ -156,5 +135,41 @@ footer {
   font-size: 12px;
   color: #888;
 }
+
+/* ===== Mobile Responsive Fixes ===== */
+@media (max-width: 600px) {
+  .input-group {
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+
+  .input-group input {
+    flex: 1 1 100%;
+    margin-bottom: 5px;
+  }
+
+  .input-group button {
+    flex: 1;
+    font-size: 14px;
+    padding: 6px 8px;
+  }
+
+  .input-group button.emoji-btn,
+  .input-group button.photo-btn {
+    max-width: 45px;
+    min-width: 40px;
+    font-size: 16px;
+    padding: 6px;
+  }
+
+  .input-group button.primary-btn {
+    font-size: 14px;
+    font-weight: bold;
+    padding: 8px 12px;
+  }
+}
+
+
 
 
