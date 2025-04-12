@@ -18,7 +18,6 @@ const darkModeToggle = document.getElementById("dark-mode-toggle");
 let timer;
 let timeLeft = 300;
 
-// ========== Message Send ==========
 function sendMessage() {
   const message = messageInput.value;
   if (message.trim()) {
@@ -28,20 +27,18 @@ function sendMessage() {
     triggerVibration();
   }
 }
-sendBtn.addEventListener("click", sendMessage);
 
+sendBtn.addEventListener("click", sendMessage);
 messageInput.addEventListener("keypress", (e) => {
   if (e.key === "Enter") sendMessage();
   else socket.emit("typing");
 });
 
-// ========== Add Message Bubble ==========
 function addMessageBubble(message, sender, showStatus = false) {
   const msgElement = document.createElement("div");
   msgElement.className = `chat-bubble ${sender}`;
   msgElement.textContent = message;
 
-  // Add reaction popup
   msgElement.addEventListener("mouseenter", () => showReactionPopup(msgElement));
   msgElement.addEventListener("mouseleave", hideReactionPopup);
 
@@ -56,7 +53,6 @@ function addMessageBubble(message, sender, showStatus = false) {
   chatBox.scrollTop = chatBox.scrollHeight;
 }
 
-// ========== Socket Events ==========
 socket.on("chatMessage", (message) => {
   addMessageBubble(message, "partner");
   socket.emit("seen");
@@ -94,7 +90,6 @@ socket.on("activeUsers", (count) => {
   activeUsersDisplay.textContent = `Active Users: ${count}`;
 });
 
-// ========== New Match ==========
 newMatchBtn.addEventListener("click", () => {
   const confirmLeave = confirm("Are you sure you want to leave this chat?");
   if (confirmLeave) {
@@ -103,7 +98,6 @@ newMatchBtn.addEventListener("click", () => {
   }
 });
 
-// ========== Photo Sharing ==========
 photoBtn.addEventListener("click", () => imageInput.click());
 
 imageInput.addEventListener("change", () => {
@@ -125,7 +119,6 @@ imageInput.addEventListener("change", () => {
   imageInput.value = "";
 });
 
-// ========== Timer ==========
 function startTimer() {
   timerDisplay.textContent = `Time Left: ${timeLeft}s`;
   timer = setInterval(() => {
@@ -141,12 +134,12 @@ function startTimer() {
     }
   }, 1000);
 }
+
 extendBtn.addEventListener("click", () => {
   timeLeft += 300;
   triggerVibration();
 });
 
-// ========== Emoji Picker ==========
 emojiBtn.addEventListener("click", () => {
   emojiPicker.style.display = emojiPicker.style.display === "none" ? "block" : "none";
 });
@@ -156,21 +149,18 @@ emojiPicker.addEventListener("emoji-click", (event) => {
   emojiPicker.style.display = "none";
 });
 
-// Auto-hide emoji picker when clicking outside
 document.addEventListener("click", (e) => {
   if (!emojiPicker.contains(e.target) && e.target !== emojiBtn) {
     emojiPicker.style.display = "none";
   }
 });
 
-// ========== Dark Mode Toggle ==========
 darkModeToggle.addEventListener("click", () => {
   document.body.classList.toggle("dark-mode");
   const icon = document.body.classList.contains("dark-mode") ? "🌞" : "🌓";
   darkModeToggle.textContent = icon;
 });
 
-// ========== Floating Reactions ==========
 let popup;
 function showReactionPopup(parent) {
   if (popup) popup.remove();
@@ -192,11 +182,9 @@ function hideReactionPopup() {
   if (popup) popup.remove();
 }
 
-// ========== Device Vibration ==========
 function triggerVibration() {
   if (navigator.vibrate) navigator.vibrate(50);
 }
-
 
 
 
