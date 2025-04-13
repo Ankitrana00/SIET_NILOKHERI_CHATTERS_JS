@@ -17,13 +17,12 @@ const darkModeToggle = document.getElementById("dark-mode-toggle");
 
 let timer;
 let timeLeft = 300;
-let popup;
 
 function sendMessage() {
   const message = messageInput.value;
   if (message.trim()) {
     socket.emit("chatMessage", message);
-    addMessageBubble(message, "user", true);
+    addMessageBubble(message, "user");
     messageInput.value = "";
     triggerVibration();
   }
@@ -36,30 +35,16 @@ messageInput.addEventListener("keypress", (e) => {
   else socket.emit("typing");
 });
 
-function addMessageBubble(message, sender, showStatus = false) {
+function addMessageBubble(message, sender) {
   const msgElement = document.createElement("div");
   msgElement.className = `chat-bubble ${sender}`;
   msgElement.textContent = message;
-
-  // Reactions
-  msgElement.addEventListener("mouseenter", () => showReactionPopup(msgElement));
-  msgElement.addEventListener("mouseleave", hideReactionPopup);
-
-  // Seen/Sent Status
-  if (showStatus) {
-    const status = document.createElement("span");
-    status.className = "status";
-    status.textContent = "Sent";
-    msgElement.appendChild(status);
-  }
-
   chatBox.appendChild(msgElement);
   chatBox.scrollTop = chatBox.scrollHeight;
 }
 
 socket.on("chatMessage", (message) => {
   addMessageBubble(message, "partner");
-  socket.emit("seen");
   sound.play();
   triggerVibration();
 });
@@ -72,11 +57,6 @@ socket.on("photo", (base64Image) => {
   chatBox.scrollTop = chatBox.scrollHeight;
   sound.play();
   triggerVibration();
-});
-
-socket.on("seen", () => {
-  const lastUserMsg = document.querySelector(".chat-bubble.user:last-child .status");
-  if (lastUserMsg) lastUserMsg.textContent = "Seen";
 });
 
 socket.on("typing", () => {
@@ -110,7 +90,6 @@ imageInput.addEventListener("change", () => {
     const reader = new FileReader();
     reader.onload = (e) => {
       socket.emit("photo", e.target.result);
-
       const img = document.createElement("img");
       img.src = e.target.result;
       img.className = "chat-photo user-photo";
@@ -164,25 +143,6 @@ darkModeToggle.addEventListener("click", () => {
   const icon = document.body.classList.contains("dark-mode") ? "🌞" : "🌓";
   darkModeToggle.textContent = icon;
 });
-
-// Reactions
-function showReactionPopup(parent) {
-  if (popup) popup.remove();
-  popup = document.createElement("div");
-  popup.className = "reaction-popup";
-  popup.innerHTML = "👍 😂 ❤️ 😮 😢 😡";
-  popup.addEventListener("click", (e) => {
-    if (e.target.textContent) {
-      parent.textContent += " " + e.target.textContent;
-      popup.remove();
-    }
-  });
-  parent.appendChild(popup);
-}
-
-function hideReactionPopup() {
-  if (popup) popup.remove();
-}
 
 function triggerVibration() {
   if (navigator.vibrate) navigator.vibrate(50);

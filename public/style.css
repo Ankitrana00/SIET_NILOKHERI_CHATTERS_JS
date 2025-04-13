@@ -150,19 +150,6 @@ body.dark-mode .chat-bubble.partner {
   color: #555;
 }
 
-.reaction-popup {
-  position: absolute;
-  bottom: 50px;
-  background: #fff;
-  border-radius: 20px;
-  padding: 5px 10px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-  display: flex;
-  gap: 8px;
-  font-size: 1.2rem;
-  z-index: 1000;
-}
-
 .typing-indicator {
   text-align: center;
   font-style: italic;
@@ -184,6 +171,7 @@ footer {
   color: #888;
   font-size: 0.8rem;
 }
+
 
 
 
