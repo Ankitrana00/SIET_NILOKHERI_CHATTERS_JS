@@ -17,6 +17,7 @@ const darkModeToggle = document.getElementById("dark-mode-toggle");
 
 let timer;
 let timeLeft = 300;
+let popup;
 
 function sendMessage() {
   const message = messageInput.value;
@@ -29,6 +30,7 @@ function sendMessage() {
 }
 
 sendBtn.addEventListener("click", sendMessage);
+
 messageInput.addEventListener("keypress", (e) => {
   if (e.key === "Enter") sendMessage();
   else socket.emit("typing");
@@ -39,9 +41,11 @@ function addMessageBubble(message, sender, showStatus = false) {
   msgElement.className = `chat-bubble ${sender}`;
   msgElement.textContent = message;
 
+  // Reactions
   msgElement.addEventListener("mouseenter", () => showReactionPopup(msgElement));
   msgElement.addEventListener("mouseleave", hideReactionPopup);
 
+  // Seen/Sent Status
   if (showStatus) {
     const status = document.createElement("span");
     status.className = "status";
@@ -77,7 +81,7 @@ socket.on("seen", () => {
 
 socket.on("typing", () => {
   typingIndicator.style.display = "block";
-  setTimeout(() => typingIndicator.style.display = "none", 1500);
+  setTimeout(() => (typingIndicator.style.display = "none"), 1500);
 });
 
 socket.on("startChat", () => {
@@ -161,20 +165,18 @@ darkModeToggle.addEventListener("click", () => {
   darkModeToggle.textContent = icon;
 });
 
-let popup;
+// Reactions
 function showReactionPopup(parent) {
   if (popup) popup.remove();
   popup = document.createElement("div");
   popup.className = "reaction-popup";
   popup.innerHTML = "👍 😂 ❤️ 😮 😢 😡";
-
   popup.addEventListener("click", (e) => {
     if (e.target.textContent) {
       parent.textContent += " " + e.target.textContent;
       popup.remove();
     }
   });
-
   parent.appendChild(popup);
 }
 
