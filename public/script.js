@@ -25,7 +25,7 @@ sendBtn.addEventListener("click", () => {
   const msg = messageInput.value.trim();
   if (msg) {
     appendMessage(msg, "user");
-    socket.emit("message", msg);
+    socket.emit("chatMessage", msg);
     messageInput.value = "";
   }
 });
@@ -33,15 +33,14 @@ sendBtn.addEventListener("click", () => {
 messageInput.addEventListener("keypress", () => {
   if (!typing) {
     typing = true;
-    socket.emit("typing", true);
+    socket.emit("typing");
     setTimeout(() => {
       typing = false;
-      socket.emit("typing", false);
     }, 2000);
   }
 });
 
-socket.on("message", (msg) => appendMessage(msg, "partner"));
+socket.on("chatMessage", (msg) => appendMessage(msg, "partner"));
 
 function appendMessage(msg, sender) {
   const div = document.createElement("div");
@@ -89,8 +88,11 @@ function appendImage(dataUrl, sender) {
 socket.on("photo", (dataUrl) => appendImage(dataUrl, "partner"));
 
 // == TYPING INDICATOR ==
-socket.on("typing", (isTyping) => {
-  typingIndicator.style.display = isTyping ? "block" : "none";
+socket.on("typing", () => {
+  typingIndicator.style.display = "block";
+  setTimeout(() => {
+    typingIndicator.style.display = "none";
+  }, 2000);
 });
 
 // == MATCHING ==
@@ -99,11 +101,11 @@ socket.on("status", (text) => {
 });
 
 newMatchBtn.addEventListener("click", () => {
-  socket.emit("new-match");
+  socket.emit("findNewMatch");
 });
 
 disconnectBtn.addEventListener("click", () => {
-  socket.emit("disconnect-match");
+  socket.emit("disconnectChat");
   resetChat();
 });
 
@@ -117,6 +119,8 @@ function resetChat() {
 
 // == TIMER ==
 function startTimer() {
+  clearInterval(timer);
+  timeLeft = 300;
   timer = setInterval(() => {
     timeLeft--;
     const mins = Math.floor(timeLeft / 60);
@@ -124,16 +128,21 @@ function startTimer() {
     timerEl.innerText = `${mins}:${secs.toString().padStart(2, "0")}`;
     if (timeLeft <= 0) {
       clearInterval(timer);
-      socket.emit("disconnect-match");
+      socket.emit("disconnectChat");
       resetChat();
     }
   }, 1000);
 }
 
-socket.on("match-found", () => {
+socket.on("startChat", () => {
   statusEl.innerText = "You're connected!";
   resetChat();
   startTimer();
+});
+
+socket.on("partnerDisconnected", () => {
+  statusEl.innerText = "Stranger disconnected.";
+  resetChat();
 });
 
 // == THEME TOGGLE ==
